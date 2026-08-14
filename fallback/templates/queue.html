@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Orbis — Approval Queue{% endblock %}
+{% block content %}
+<h1>Approval queue</h1>
+{% if not items %}<p class="muted">Nothing pending.</p>{% endif %}
+<table>
+<tr><th>Submitted</th><th>Agent</th><th>Destination</th><th>Category</th><th>Amount</th><th>Cited</th><th></th></tr>
+{% for d in items %}
+<tr>
+  <td class="mono">{{ d.spend_request.submitted_at }}</td>
+  <td>{{ d.spend_request.agent_id }}</td>
+  <td><span class="pill pill-{{ d.spend_request.destination_type }}">{{ d.spend_request.destination_type }}</span></td>
+  <td>{{ d.spend_request.category }}</td>
+  <td>${{ "%.2f"|format(d.spend_request.amount_cents / 100) }}</td>
+  <td class="mono">{{ d.cited_rule_ids | join(", ") }}</td>
+  <td><a class="btn" href="/ui/decisions/{{ d.id }}">Review</a></td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

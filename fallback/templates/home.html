@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Orbis — Agents{% endblock %}
+{% block content %}
+<h1>Registered agents</h1>
+<table>
+<tr><th>Name</th><th>Kind</th><th>Status</th><th>Runtime</th><th>Wallet</th></tr>
+{% for a in agents %}
+<tr>
+  <td>{{ a.name }}</td>
+  <td>{{ a.kind }}</td>
+  <td><span class="pill pill-{{ a.status }}">{{ a.status }}</span></td>
+  <td class="mono">{{ a.runtime_id }}</td>
+  <td class="mono muted">{{ a.wallet_id or "—" }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Submit a spend request</h2>
+<form class="card" id="submit-form">
+  <label>Agent</label>
+  <select name="agent_id">
+    {% for a in agents %}{% if a.kind == "spender" %}<option value="{{ a.id }}">{{ a.name }}</option>{% endif %}{% endfor %}
+  </select>
+  <label>Destination</label>
+  <select name="destination_type" id="dest-type">
+    <option value="bank">bank</option>
+    <option value="agent">agent</option>
+  </select>
+  <label>Vendor name (bank destination)</label>
+  <input name="vendor_name_raw" placeholder="e.g. ACME Cloud Services LLC">
+  <label>Counterparty agent id (agent destination)</label>
+  <input name="counterparty_agent_id" placeholder="e.g. agent_vendor">
+  <label>Category</label>
+  <select name="category">
+    <option>infrastructure</option><option>software</option><option>legal</option>
+    <option>contractor</option><option>marketing</option><option>travel</option>
+    <option>hardware</option><option>other</option>
+  </select>
+  <label>Amount (USD)</label>
+  <input name="amount_usd" type="number" step="0.01" value="200">
+  <label>Business purpose</label>
+  <input name="business_purpose_raw" value="API credits top-up">
+  <button type="submit">Submit</button>
+  <span id="submit-result" class="muted mono" style="margin-left:1rem"></span>
+</form>
+
+<script>
+document.getElementById('submit-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const body = {
+    agent_id: f.get('agent_id'),
+    destination_type: f.get('destination_type'),
+    vendor_name_raw: f.get('vendor_name_raw') || null,
+    counterparty_agent_id: f.get('counterparty_agent_id') || null,
+    category: f.get('category'),
+    amount_cents: Math.round(parseFloat(f.get('amount_usd')) * 100),
+    business_purpose_raw: f.get('business_purpose_raw'),
+  };
+  const res = await fetch('/spend-requests', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const data = await res.json();
+  if (res.ok) {
+    window.location = '/ui/decisions/' + data.id;
+  } else {
+    document.getElementById('submit-result').textContent = JSON.stringify(data);
+  }
+});
+</script>
+{% endblock %}

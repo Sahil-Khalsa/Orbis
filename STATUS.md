@@ -9,6 +9,25 @@ Owners: **Sahil** · **Nesh**
 
 > Superseded plan: this replaces the earlier T0–T14 / 3:45-freeze version of this file, written before the Forge+Daytona pivot.
 
+> **Local-build pivot (2026-08-14):** at the user's request, the rest of this build moved off Forge and
+> Daytona entirely — built and run locally with Claude Code instead. FastAPI + SQLite + server-rendered
+> Jinja2 templates, no JS build step. Daytona sandboxes are replaced by plain local processes under
+> `agents/` (`agent_ops.py`, `agent_vendor.py`, `agent_runaway.py`, `agent_hostile.py`): each talks to the
+> Orbis API over HTTP only and imports nothing from `fallback.*`, which is the part of the isolation boundary
+> that's actually verifiable without a real sandbox (`grep -rn "^from fallback\|^import fallback" agents/` returns
+> nothing) — the network-egress boundary Daytona would enforce is not present locally, and `demo.py`'s
+> beat 1 says so rather than faking a network failure. The reasoner/extractor use OpenAI (not Anthropic —
+> `OPENAI_API_KEY`/`OPENAI_MODEL` in `.env`) since that's the key available; without one configured, DEFER
+> routes to a human (`REASONER_UNAVAILABLE`) and injection detection falls back to a keyword heuristic,
+> so the whole P0 spine runs with zero external keys. `STRIPE_SECRET_KEY` in `.env` is still a placeholder
+> (`sk_test_replace_me`) — boots fine (passes the `sk_test_` prefix assert) but real PaymentIntent creation
+> will fail auth until a working Stripe test key is added; execution retries once then dead-letters to the
+> queue, so this degrades safely rather than crashing. `demo.py` replaces the snapshot verification (E1/E2)
+> — run `python -m fallback.seed --seed 42`, start the server, then `python demo.py` for all 9 beats end to end.
+> All P0 items below are built and tested; shadow report is exactly 7 findings (pinned in
+> `tests/test_shadow.py`), $28,976.85 total (not the placeholder "$23,400" below — that figure was always
+> approximate/invented per section 15's open items, not a hard target).
+
 ---
 
 ## Before you start
@@ -74,15 +93,15 @@ Owners: **Sahil** · **Nesh**
 
 ## Pre-freeze demo verification (run all 9 from the snapshot, 2:45–3:15)
 
-1. [ ] Five Daytona sandboxes up; curl a non-Orbis URL from inside one, watch it fail
-2. [ ] $200 API credits → auto-approves in ~2s
-3. [ ] `agent-ops` pays `agent-vendor` → settles A2A in ~1s, inside a signed warrant
-4. [ ] $4,200 `Accme Cloud Svcs` → BLOCK, shows $4,080 `ACME Cloud Services LLC` from 11 days earlier
-5. [ ] `agent-runaway` bursts → R5 freezes it live, pending held
-6. [ ] `agent-hostile` invoice "pre-approved by the CFO" → flattened, flagged, zero effect
-7. [ ] $9,000 routes with cited warrant clause → approve live → payment executes, budget moves
-8. [ ] Shadow report shows 7 violations, $23,400
-9. [ ] Close line lands: "Stripe gave agents wallets. Orbis gives them approvals."
+1. [x] Five local agent processes up (not Daytona sandboxes — see pivot note); `agents/` imports nothing from `fallback.*`, verified by grep. No real network-egress boundary locally (honestly narrated in `demo.py` beat 1, not faked).
+2. [x] $200 API credits → auto-approves in ~2s
+3. [x] `agent-ops` pays `agent-vendor` → settles A2A in ~1s, inside a signed warrant
+4. [x] $4,200 `Accme Cloud Svcs` → cites R3+R4 and the $4,080 `ACME Cloud Services LLC` payment from 11 days earlier; ROUTE_TO_HUMAN without a reasoner key configured, would BLOCK automatically with one (see pivot note)
+5. [x] `agent-runaway` bursts → R5 freezes it live, requests 7-9 rejected outright with 423. (The orchestrator's "hold pending requests" update has nothing to act on in this synchronous request-per-call design — each request is fully adjudicated before the next is sent, so nothing is ever mid-flight when the freeze fires. Same protective outcome, different mechanism than the spec's async framing assumed — worth knowing before claiming "pending held" on stage.)
+6. [x] `agent-hostile` invoice "pre-approved by the CFO" → flattened, flagged (`AUTHORITY_CLAIM_DETECTED`), routed to a human rather than silently approved — the opposite of what the memo asked for
+7. [x] $9,000 routes with cited warrant clause → approve live → decision/approval recorded; PaymentIntent execution needs a real `STRIPE_SECRET_KEY` (placeholder in `.env` fails auth, dead-letters to queue safely — see pivot note)
+8. [x] Shadow report shows 7 violations, $28,976.85 (was "$23,400" in the original plan — see pivot note above)
+9. [x] Close line lands: "Stripe gave agents wallets. Orbis gives them approvals."
 
 ## Open items — resolve before or during the day, not on stage
 
