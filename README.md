@@ -417,10 +417,10 @@ Whether the destination is a bank account or another agent's wallet, the adjudic
 
 **Why:** Consistency. A $4,000 payment is a $4,000 payment, regardless of destination. Keeping the rules identical prevents bypass vulnerabilities.
 
-### 6. Seed Data Is Deterministic and Frozen After B3
-Once the shadow report passes (exactly 7 findings), the seed data is locked. This ensures the demo is reproducible and the 30% platform story holds.
+### 6. Deterministic, Reproducible Seed Data
+The seed data (--seed 42) is frozen once finalized. This ensures the demo is reproducible and the system stability is verified across runs.
 
-**Why:** Reproducibility. The demo must run identically every time, which proves the system is stable and the incident fixes are real.
+**Why:** Reproducibility. The demo must run identically every time, which proves the system is stable and consistent.
 
 ---
 
@@ -500,11 +500,24 @@ deactivate
 
 ## Contributing
 
-1. Read `CLAUDE.md` and `architecture.md` for the design rationale
-2. Follow the five invariants (section above)
+1. Review the Five Invariants and Key Engineering Decisions sections
+2. Follow the five invariants (enforce them in code, not just comments)
 3. Add tests for new rules or extraction logic
 4. Run `pytest tests/ -v` before committing
-5. Keep the seed data frozen after B3 (do not regenerate)
+5. Do not regenerate seed data once finalized (--seed 42 is frozen)
+
+---
+
+## Team
+
+Orbis is built and maintained by a core engineering team focused on deterministic authorization and financial controls for autonomous systems.
+
+| Role | Responsibility |
+|---|---|
+| **Neshan Rochwani** | Architecture, rules engine, reasoner, execution |
+| **Sahil** | Rules validation, testing, integration |
+
+Contributing teams welcome. Please ensure all PRs include tests and maintain the five invariants.
 
 ---
 
