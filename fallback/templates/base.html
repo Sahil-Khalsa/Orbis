@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{% block title %}Orbis{% endblock %}</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", sans-serif; background: #0f1115; color: #e6e8eb;
+         margin: 0; padding: 0 0 3rem; }
+  header { background: #161923; padding: 1rem 2rem; border-bottom: 1px solid #262a38;
+           display: flex; align-items: center; gap: 1.5rem; }
+  header a { color: #9fb4ff; text-decoration: none; font-size: 0.92rem; }
+  header a:hover { text-decoration: underline; }
+  header .brand { font-weight: 700; color: #fff; font-size: 1.05rem; letter-spacing: 0.02em; }
+  main { max-width: 980px; margin: 2rem auto; padding: 0 1.5rem; }
+  h1 { font-size: 1.4rem; margin-bottom: 1.2rem; }
+  h2 { font-size: 1.05rem; color: #b8bfcc; margin-top: 2rem; }
+  table { width: 100%; border-collapse: collapse; margin: 0.8rem 0 1.6rem; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 1px solid #232733; }
+  th { color: #8890a3; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  tr:hover td { background: #171b26; }
+  .pill { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.75rem;
+          font-weight: 600; letter-spacing: 0.02em; }
+  .pill-AUTO_APPROVE { background: #113322; color: #6ee7a0; }
+  .pill-ROUTE_TO_HUMAN { background: #3a2f10; color: #f0c96b; }
+  .pill-BLOCK { background: #3a1414; color: #ff8787; }
+  .pill-active { background: #113322; color: #6ee7a0; }
+  .pill-frozen { background: #3a1414; color: #ff8787; }
+  .pill-agent { background: #1b2a4a; color: #8fb4ff; }
+  .pill-bank { background: #2a2140; color: #c79bff; }
+  .card { background: #161923; border: 1px solid #262a38; border-radius: 10px; padding: 1.2rem 1.4rem; margin-bottom: 1.2rem; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; color: #b8bfcc; }
+  .muted { color: #7d8494; }
+  button, .btn { background: #2f6feb; color: #fff; border: none; padding: 0.4rem 0.9rem; border-radius: 6px;
+        font-size: 0.85rem; cursor: pointer; }
+  button.deny { background: #b3413e; }
+  input, textarea, select { background: #0f1115; border: 1px solid #333949; color: #e6e8eb;
+        border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.88rem; }
+  label { display: block; margin-top: 0.7rem; font-size: 0.82rem; color: #9aa1b1; }
+  form.card > button { margin-top: 1rem; }
+  .rule-fired { color: #f0c96b; }
+  .rule-clean { color: #57708a; }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">ORBIS</span>
+  <a href="/">Agents</a>
+  <a href="/ui/queue">Approval Queue</a>
+  <a href="/ui/shadow">Shadow Report</a>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

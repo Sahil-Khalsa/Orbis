@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Orbis — Shadow Report{% endblock %}
+{% block content %}
+<h1>Shadow report</h1>
+<div class="card">
+  <p style="font-size:1.6rem; margin:0">{{ report.count }} findings</p>
+  <p class="muted">Total impact: ${{ "%.2f"|format(report.total_impact_cents / 100) }}</p>
+</div>
+<table>
+<tr><th>Occurred</th><th>Txn</th><th>Rules</th><th>Reason</th><th>Amount</th></tr>
+{% for f in report.findings %}
+<tr>
+  <td class="mono">{{ f.occurred_at }}</td>
+  <td class="mono">{{ f.txn_id }}</td>
+  <td class="mono">{{ f.rule_ids | join("+") }}</td>
+  <td>{{ f.reason_codes | join(", ") }}</td>
+  <td>${{ "%.2f"|format(f.amount_cents / 100) }}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

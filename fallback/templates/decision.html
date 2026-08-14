@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Orbis — Decision {{ d.id }}{% endblock %}
+{% block content %}
+<h1>Decision <span class="mono muted">{{ d.id }}</span></h1>
+
+<div class="card">
+  <span class="pill pill-{{ d.outcome }}">{{ d.outcome }}</span>
+  <span class="pill pill-{{ d.spend_request.destination_type }}">{{ d.spend_request.destination_type }}</span>
+  <p style="margin:0.9rem 0 0.3rem"><b>{{ d.spend_request.agent_id }}</b> →
+    {% if d.spend_request.destination_type == "bank" %}
+      {{ d.spend_request.vendor_name_raw }}
+    {% else %}
+      {{ d.spend_request.counterparty_agent_id }}
+    {% endif %}
+    — <b>${{ "%.2f"|format(d.spend_request.amount_cents / 100) }}</b> ({{ d.spend_request.category }})
+  </p>
+  <p class="muted">{{ d.spend_request.business_purpose_raw }}</p>
+  <p class="muted mono" style="font-size:0.8rem">submitted {{ d.spend_request.submitted_at }} · decided {{ d.decided_at }} by {{ d.decided_by }}</p>
+</div>
+
+{% if d.extraction and d.extraction.injection_flags %}
+<div class="card" style="border-color:#7a3b1f; background:#241511">
+  <b style="color:#ffb37a">⚠ Injection flags on submitted text: {{ d.extraction.injection_flags | join(", ") }}</b>
+  <p class="muted" style="margin:0.4rem 0 0; font-size:0.85rem">
+    The raw memo was read only by the extractor and reduced to this typed flag before reaching
+    adjudication — the imperative language itself never influenced the rule outcome.
+  </p>
+</div>
+{% endif %}
+
+<h2>Rationale</h2>
+<div class="card mono" style="font-size:0.85rem; line-height:1.5">{{ d.rationale }}</div>
+
+{% if d.warrant_clause %}
+<h2>Cited warrant</h2>
+<div class="card">
+  <p class="mono muted" style="font-size:0.8rem">{{ d.cited_warrant_id }}</p>
+  <p>{{ d.warrant_clause }}</p>
+</div>
+{% endif %}
+
+<h2>Rule results</h2>
+<table>
+<tr><th>Rule</th><th>Outcome</th><th>Reason</th><th>Detail</th><th>Evidence</th></tr>
+{% for r in d.rule_results %}
+<tr class="{{ 'rule-fired' if r.outcome != 'AUTO_APPROVE' else 'rule-clean' }}">
+  <td class="mono">{{ r.rule_id }}</td>
+  <td><span class="pill pill-{{ r.outcome }}">{{ r.outcome }}</span></td>
+  <td>{{ r.reason_code }}</td>
+  <td style="font-size:0.85rem">{{ r.detail }}</td>
+  <td class="mono muted" style="font-size:0.78rem">{{ r.evidence_ids | join(", ") }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% if d.spend_request.status == "queued" %}
+<h2>Human review</h2>
+<div class="card">
+  <label>Principal id</label>
+  <input id="principal_id" value="p_alice">
+  <label>Note</label>
+  <input id="note" placeholder="optional">
+  <div style="margin-top:1rem">
+    <button onclick="act('approve')">Approve</button>
+    <button class="deny" onclick="act('deny')">Deny</button>
+  </div>
+  <p id="act-result" class="muted mono" style="margin-top:0.6rem"></p>
+</div>
+<script>
+async function act(action) {
+  const body = {principal_id: document.getElementById('principal_id').value, note: document.getElementById('note').value};
+  const res = await fetch('/decisions/{{ d.id }}/' + action, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const data = await res.json();
+  document.getElementById('act-result').textContent = res.ok ? ('done: ' + data.outcome) : JSON.stringify(data);
+  if (res.ok) setTimeout(() => window.location.reload(), 600);
+}
+</script>
+{% endif %}
+{% endblock %}

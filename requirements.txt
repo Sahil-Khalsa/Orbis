@@ -2,8 +2,9 @@ fastapi
 uvicorn
 pydantic>=2
 pytest
-anthropic
+openai
 stripe
 rapidfuzz
-networkx
-opentelemetry-sdk
+jinja2
+python-multipart
+python-dotenv
